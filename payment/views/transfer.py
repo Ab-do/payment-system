@@ -10,7 +10,7 @@ from account.models import Account
 
 
 class TransferDetailsView(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, uid, *args, **kwargs):
         transfer = get_object_or_404(Transfer, uid=uid)
@@ -19,7 +19,7 @@ class TransferDetailsView(APIView):
 
 
 class TransferView(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
         transfer = Transfer.objects.all()
@@ -41,8 +41,9 @@ class TransferView(APIView):
         data['sender'] = sender.id
         data['receiver'] = receiver.id
         transfer_serializer = TransferSerializer(data=request.data)
-        if transfer_serializer.is_valid(raise_exception=True):
+        try:
+            transfer_serializer.is_valid(raise_exception=True)
             transfer_serializer.save()
             return Response(data=transfer_serializer.data, status=status.HTTP_202_ACCEPTED)
-        else:
-            return Response(data=transfer_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as error:
+            return Response(data={'message': str(error)}, status=status.HTTP_400_BAD_REQUEST)
