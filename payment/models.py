@@ -2,12 +2,19 @@ from django.db import models
 from account.models import Account
 import uuid
 
+STATE_TRANSFER = [
+    ('pending', 'pending'),
+    ('error', 'error'),
+    ('done', 'done')
+]
+
 
 class Transfer(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     sender = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sender')
     receiver = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='receiver')
     amount = models.FloatField()
+    state = models.CharField(max_length=10, choices=STATE_TRANSFER, default='pending')
 
     def __str__(self):
         return str(self.uid)
@@ -18,8 +25,9 @@ class Transfer(models.Model):
         if self.sender == self.receiver:
             raise ValueError("It is not possible to transfer to the same person.")
         if not self.transfer():
-            raise ValueError("error")
-
+            self.state = 'error'
+        else:
+            self.state = 'done'
         return super(Transfer, self).save(args, kwargs)
 
     def transfer(self):
@@ -28,7 +36,12 @@ class Transfer(models.Model):
             self.receiver.balance = float(self.receiver.balance) + amount
             self.sender.balance = float(self.sender.balance) - amount
             self.sender.save()
-            self.receiver.save()
+            try:
+                self.receiver.save()
+            except Exception as error:
+                self.sender.balance = float(self.sender.balance) + amount
+                self.sender.save()
+                raise Exception(error)
             return True
         except Exception as error:
             print(error)
