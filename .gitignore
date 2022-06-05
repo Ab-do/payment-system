@@ -1,4 +1,5 @@
 .idea/
 venv/
 payment/migrations
+account/migrations
 db.sqlite3
