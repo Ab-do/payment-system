@@ -28,7 +28,7 @@ class Transfer(models.Model):
             self.state = 'error'
         else:
             self.state = 'done'
-        return super(Transfer, self).save(args, kwargs)
+        return super(Transfer, self).save(*args, **kwargs)
 
     def transfer(self):
         try:
