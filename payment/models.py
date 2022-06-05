@@ -15,6 +15,7 @@ class Transfer(models.Model):
     receiver = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='receiver')
     amount = models.FloatField()
     state = models.CharField(max_length=10, choices=STATE_TRANSFER, default='pending')
+    create_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.uid)
