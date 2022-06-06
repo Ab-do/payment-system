@@ -9,7 +9,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from payment.models import Transfer
 from account.models import Account
 from rest_framework import generics
-from django_filters import rest_framework as filters
 
 
 class LedgerList(generics.ListAPIView):
