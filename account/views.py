@@ -5,9 +5,11 @@ from .serializers import BalanceSerializer, AccountListSerializer, AccountFilter
 from .models import Account
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework import permissions
 
 
 class BalanceView(APIView):
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, uid):
         account = get_object_or_404(Account, uid=uid)
@@ -19,6 +21,7 @@ class AccountsList(generics.ListAPIView):
     model = Account
     serializer_class = AccountListSerializer
     filterset_class = AccountFilter
+    permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
         return Account.objects.all()

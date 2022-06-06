@@ -9,8 +9,16 @@ from account.models import Account
 class TransferTestsAdmin(APITestCase):
 
     def setUp(self):
-        self.superuser = User.objects.create_superuser('superuser', 'superuser@test.com', 'test')
-        self.client.login(username='superuser', password='test')
+        superuser = {
+            'username': 'superuser',
+            'password': 'superuser',
+            'email': 'superuser@test.com'
+        }
+        User.objects.create_superuser(username=superuser["username"],
+                                      email=superuser["email"],
+                                      password=superuser["password"])
+        response = self.client.post(reverse('rest_login'), superuser, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {response.data["access_token"]}')
         self.sender = User.objects.create_user(username='sender', email='sender@gmail.com', password="pass")
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
         self.balance = 100
@@ -106,7 +114,7 @@ class TransferTestsAnonymous(APITestCase):
         :return:
         """
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_transfer_normal(self):
         """
@@ -118,14 +126,22 @@ class TransferTestsAnonymous(APITestCase):
             "amount": 10.0
         }
         response = self.client.post(self.url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class TransferTestsUser(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(username='user', email='user@gmail.com', password="pass")
-        self.client.login(username='user', password='pass')
+        user = {
+            'username': 'user',
+            'password': 'user',
+            'email': 'user@test.com'
+        }
+        User.objects.create_user(username=user["username"],
+                                      email=user["email"],
+                                      password=user["password"])
+        response = self.client.post(reverse('rest_login'), user, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {response.data["access_token"]}')
         self.sender = User.objects.create_user(username='sender', email='sender@gmail.com', password="pass")
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
         self.balance = 100
