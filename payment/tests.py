@@ -55,6 +55,10 @@ class TransferTestsAdmin(APITestCase):
         }
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        sender = self.client.get(reverse('account:balance', kwargs={'uid': self.sender_account.uid}))
+        receiver = self.client.get(reverse('account:balance', kwargs={'uid': self.receiver_account.uid}))
+        self.assertEqual(float(sender.data['balance']), 90.0)
+        self.assertEqual(float(receiver.data['balance']), 110.0)
 
     def test_transfer_more_then_balance_sender(self):
         """
