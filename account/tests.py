@@ -23,6 +23,7 @@ class AuthTests(APITestCase):
         response = self.client.get(reverse('account:accounts-list'), data={'format': 'json'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
 
+
 class TestAccounts(APITestCase):
 
     def setUp(self):
@@ -31,7 +32,7 @@ class TestAccounts(APITestCase):
             'password': 'superuser',
             'email': 'superuser@test.com'
         }
-        User.objects.create_superuser(username=superuser["username"],
+        self.bank = User.objects.create_superuser(username=superuser["username"],
                                       email=superuser["email"],
                                       password=superuser["password"])
         response = self.client.post(reverse('rest_login'), superuser, format='json')
@@ -40,19 +41,20 @@ class TestAccounts(APITestCase):
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
         self.balance = 100
         self.sender_account = Account.objects.create(
-            user=self.sender,
-            balance=self.balance,
+            user=self.sender
         )
         self.receiver_account = Account.objects.create(
             user=self.receiver,
-            balance=self.balance,
+        )
+        self.bank_account = Account.objects.create(
+            user=self.bank,
         )
 
     def test_get_balance(self):
         uid = self.sender_account.uid
         response = self.client.get(reverse('account:balance', kwargs={'uid': uid}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(dict(response.data).get('balance'), 100)
+        self.assertEqual(dict(response.data).get('balance'), 0)
 
     def test_account_list(self):
         response = self.client.get(reverse('account:accounts-list'))

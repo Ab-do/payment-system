@@ -14,21 +14,26 @@ class TransferTestsAdmin(APITestCase):
             'password': 'superuser',
             'email': 'superuser@test.com'
         }
-        User.objects.create_superuser(username=superuser["username"],
-                                      email=superuser["email"],
-                                      password=superuser["password"])
+        bank = User.objects.create_superuser(username=superuser["username"],
+                                             email=superuser["email"],
+                                             password=superuser["password"])
         response = self.client.post(reverse('rest_login'), superuser, format='json')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {response.data["access_token"]}')
         self.sender = User.objects.create_user(username='sender', email='sender@gmail.com', password="pass")
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
-        self.balance = 100
         self.sender_account = Account.objects.create(
             user=self.sender,
-            balance=self.balance,
         )
         self.receiver_account = Account.objects.create(
             user=self.receiver,
-            balance=self.balance,
+        )
+        bank_account = Account.objects.create(
+            user=bank,
+        )
+        Transfer.objects.create(
+            sender=bank_account,
+            receiver=self.sender_account,
+            amount=100
         )
         self.url = reverse('payment:transfer')
 
@@ -42,7 +47,7 @@ class TransferTestsAdmin(APITestCase):
 
     def test_create_sender_receiver(self):
         accounts = Account.objects.count()
-        self.assertEqual(accounts, 2)
+        self.assertEqual(accounts, 3)
 
     def test_transfer_normal(self):
         """
@@ -58,7 +63,7 @@ class TransferTestsAdmin(APITestCase):
         sender = self.client.get(reverse('account:balance', kwargs={'uid': self.sender_account.uid}))
         receiver = self.client.get(reverse('account:balance', kwargs={'uid': self.receiver_account.uid}))
         self.assertEqual(float(sender.data['balance']), 90.0)
-        self.assertEqual(float(receiver.data['balance']), 110.0)
+        self.assertEqual(float(receiver.data['balance']), 10.0)
 
     def test_transfer_more_then_balance_sender(self):
         """
@@ -101,14 +106,11 @@ class TransferTestsAnonymous(APITestCase):
     def setUp(self):
         self.sender = User.objects.create_user(username='sender', email='sender@gmail.com', password="pass")
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
-        self.balance = 100
         self.sender_account = Account.objects.create(
             user=self.sender,
-            balance=self.balance,
         )
         self.receiver_account = Account.objects.create(
             user=self.receiver,
-            balance=self.balance,
         )
         self.url = reverse('payment:transfer')
 
@@ -142,20 +144,17 @@ class TransferTestsUser(APITestCase):
             'email': 'user@test.com'
         }
         User.objects.create_user(username=user["username"],
-                                      email=user["email"],
-                                      password=user["password"])
+                                 email=user["email"],
+                                 password=user["password"])
         response = self.client.post(reverse('rest_login'), user, format='json')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {response.data["access_token"]}')
         self.sender = User.objects.create_user(username='sender', email='sender@gmail.com', password="pass")
         self.receiver = User.objects.create_user(username='receiver', email='receiver@gmail.com', password="pass")
-        self.balance = 100
         self.sender_account = Account.objects.create(
             user=self.sender,
-            balance=self.balance,
         )
         self.receiver_account = Account.objects.create(
             user=self.receiver,
-            balance=self.balance,
         )
         self.url = reverse('payment:transfer')
 
