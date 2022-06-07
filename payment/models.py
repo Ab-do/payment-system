@@ -1,5 +1,5 @@
 from django.db import models
-from account.models import Account
+# from account.models import Account
 import uuid
 
 STATE_TRANSFER = [
@@ -11,8 +11,8 @@ STATE_TRANSFER = [
 
 class Transfer(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    sender = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sender')
-    receiver = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='receiver')
+    sender = models.ForeignKey('account.Account', on_delete=models.CASCADE, related_name='sender')
+    receiver = models.ForeignKey('account.Account', on_delete=models.CASCADE, related_name='receiver')
     amount = models.FloatField()
     state = models.CharField(max_length=10, choices=STATE_TRANSFER, default='pending')
     create_at = models.DateTimeField(auto_now_add=True)
@@ -25,25 +25,5 @@ class Transfer(models.Model):
             raise ValueError("you have to put a valid value")
         if self.sender == self.receiver:
             raise ValueError("It is not possible to transfer to the same person.")
-        if not self.transfer():
-            self.state = 'error'
-        else:
-            self.state = 'done'
+        self.state = 'done'
         return super(Transfer, self).save(*args, **kwargs)
-
-    def transfer(self):
-        try:
-            amount = float(self.amount)
-            self.receiver.balance = float(self.receiver.balance) + amount
-            self.sender.balance = float(self.sender.balance) - amount
-            self.sender.save()
-            try:
-                self.receiver.save()
-            except Exception as error:
-                self.sender.balance = float(self.sender.balance) + amount
-                self.sender.save()
-                raise Exception(error)
-            return True
-        except Exception as error:
-            print(error)
-            return False

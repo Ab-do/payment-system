@@ -23,7 +23,6 @@ class TransferView(APIView):
 
     def get(self, request, *args, **kwargs):
         transfer = Transfer.objects.all()
-        print(request.headers)
         transfer_serializer = TransferSerializer(transfer, many=True)
         return Response(data=transfer_serializer.data, status=status.HTTP_200_OK)
 
@@ -36,7 +35,7 @@ class TransferView(APIView):
         except KeyError as key:
             return Response(data={'message': f'{key} required.'}, status=status.HTTP_400_BAD_REQUEST)
         sender = get_object_or_404(Account, uid=uid_sender)
-        if not float(sender.balance) - amount > 0.0:
+        if not float(sender.balance()) - amount >= 0.0:
             return Response(data={'message': 'Your balance is insufficient.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         receiver = get_object_or_404(Account, uid=uid_receiver)
         data['sender'] = sender.id

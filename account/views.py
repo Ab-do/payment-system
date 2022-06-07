@@ -9,7 +9,7 @@ from rest_framework import permissions
 
 
 class BalanceView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, uid):
         account = get_object_or_404(Account, uid=uid)
